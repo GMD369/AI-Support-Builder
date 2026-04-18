@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-function getRequiredEnvVar(name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'): string {
-	const value = process.env[name]
+function getRequiredEnvVar(value: string | undefined, name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'): string {
+	const normalizedValue = value?.trim()
 
-	if (!value) {
+	if (!normalizedValue) {
 		throw new Error(`Missing required environment variable: ${name}`)
 	}
 
-	return value
+	return normalizedValue
 }
 
-const supabaseUrl = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_URL')
-const supabaseKey = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+const supabaseUrl = getRequiredEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL, 'NEXT_PUBLIC_SUPABASE_URL')
+const supabaseKey = getRequiredEnvVar(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'NEXT_PUBLIC_SUPABASE_ANON_KEY')
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
