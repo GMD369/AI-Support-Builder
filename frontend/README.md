@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Create a local env file and include these variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+`NEXT_PUBLIC_API_BASE_URL` is used by the frontend auth helper to call protected FastAPI routes with the Supabase access token in the `Authorization` header.
+
 ## Getting Started
 
 First, run the development server:
