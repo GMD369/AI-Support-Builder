@@ -4,20 +4,24 @@ from app.config import GROQ_API_KEY
 
 client = Groq(api_key=GROQ_API_KEY)
 
-def generate_response(question: str, user_id: str):
-    # Step 1: Retrieve relevant chunks
-    chunks = search_similar_chunks(question, user_id)
+
+def generate_response(question: str, user_id: str, bot_id: str = "default") -> dict:
+    chunks = search_similar_chunks(question, user_id, bot_id)
+
+    if not chunks:
+        return {
+            "answer": "I don't have enough information to answer that question.",
+            "context": [],
+        }
 
     context = "\n\n".join(chunks)
 
-    # Step 2: Prompt
-    prompt = f"""
-You are a professional customer support assistant.
+    prompt = f"""You are a professional customer support assistant.
 
 Rules:
-- Answer ONLY from the context
-- If answer not found, say: "I don't know"
-- Keep answer clear and short
+- Answer ONLY from the context below
+- If the answer is not found in the context, say: "I don't know"
+- Keep your answer clear and concise
 
 Context:
 {context}
@@ -25,22 +29,20 @@ Context:
 Question:
 {question}
 
-Answer:
-"""
+Answer:"""
 
-    # Step 3: Call Groq LLM
     response = client.chat.completions.create(
-        model="llama3-70b-8192",  # 🔥 very powerful model
+        model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": "You are a helpful support assistant."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
-        temperature=0.3
+        temperature=0.3,
     )
 
     answer = response.choices[0].message.content
 
     return {
         "answer": answer,
-        "context": chunks
+        "context": chunks,
     }
