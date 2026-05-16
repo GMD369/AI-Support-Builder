@@ -3,9 +3,12 @@ from typing import Optional
 from app.auth.dependencies import get_current_user
 from app.services.embedding_service import generate_embedding
 from app.services.chunking import chunk_text
+from app.services.file_parser import extract_text
 from app.database import SessionLocal
 from app.schemas import DocumentUploadResponse, DocumentListResponse
 from sqlalchemy import text
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
 
@@ -33,16 +36,16 @@ async def upload_document(
     except Exception:
         raise HTTPException(status_code=400, detail="Failed to read uploaded file")
 
-    try:
-        text_data = content.decode("utf-8")
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded text")
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10 MB.")
+
+    filename = file.filename or "unknown"
+    text_data = extract_text(filename, content)
 
     if not text_data.strip():
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     chunks = chunk_text(text_data)
-    filename = file.filename or "unknown"
 
     db = SessionLocal()
     try:
