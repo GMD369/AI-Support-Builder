@@ -6,6 +6,48 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/app/lib/supabaseClient";
 
+function ArrowRightIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path d="M4.5 10h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M11 6.5L14.5 10 11 13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DocumentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-5 w-5">
+      <path d="M7 3.5h7.5L19.5 8v12.5A1.5 1.5 0 0 1 18 22H7A1.5 1.5 0 0 1 5.5 20.5V5A1.5 1.5 0 0 1 7 3.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M14.5 3.5V8H19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.5 12H16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M8.5 15.5H14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BotIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-5 w-5">
+      <rect x="5" y="7" width="14" height="11" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 4v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9.5" cy="12.5" r="1" fill="currentColor" />
+      <circle cx="14.5" cy="12.5" r="1" fill="currentColor" />
+      <path d="M9 15.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function EmbedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-5 w-5">
+      <path d="M8.5 9 5 12.5 8.5 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.5 9 19 12.5 15.5 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13.5 6.5 10.5 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -115,9 +157,10 @@ export default function Home() {
         <div className="mt-10 flex w-full max-w-md flex-col gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/signup"
-            className="rounded-xl bg-[#0A4F8F] px-6 py-3 text-center text-base font-semibold text-white transition hover:bg-[#1D7FC4]"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0A4F8F] px-6 py-3 text-center text-base font-semibold text-white transition hover:bg-[#1D7FC4]"
           >
             Get Started Free
+            <ArrowRightIcon />
           </Link>
           <Link
             href="/login"
@@ -130,15 +173,17 @@ export default function Home() {
         {/* Feature highlights */}
         <div className="mt-20 grid w-full max-w-4xl gap-6 sm:grid-cols-3">
           {[
-            { icon: "📄", title: "Upload Documents", desc: "Drop in your FAQs, manuals, or policy docs as plain text files." },
-            { icon: "🤖", title: "Train Your Bot", desc: "Your documents are chunked, embedded, and indexed for AI retrieval instantly." },
-            { icon: "🔗", title: "Embed Anywhere", desc: "Copy one script tag and add a floating chat widget to any website." },
+            { icon: <DocumentIcon />, title: "Upload Documents", desc: "Drop in your FAQs, manuals, or policy docs as plain text files." },
+            { icon: <BotIcon />, title: "Train Your Bot", desc: "Your documents are chunked, embedded, and indexed for AI retrieval instantly." },
+            { icon: <EmbedIcon />, title: "Embed Anywhere", desc: "Copy one script tag and add a floating chat widget to any website." },
           ].map((f) => (
             <div
               key={f.title}
-              className="rounded-xl border border-[#BAE6FD] bg-white p-6 text-left shadow-sm"
+              className="rounded-xl border border-[#BAE6FD] bg-white p-6 text-left shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
             >
-              <p className="mb-3 text-3xl">{f.icon}</p>
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0F9FF] text-[#0A4F8F]">
+                {f.icon}
+              </div>
               <h3 className="font-bold text-[#0A4F8F]">{f.title}</h3>
               <p className="mt-1 text-sm text-[#1D7FC4]">{f.desc}</p>
             </div>

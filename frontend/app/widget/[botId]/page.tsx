@@ -7,6 +7,27 @@ type LocalMessage = { role: "user" | "assistant"; content: string };
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
+function BotIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
+      <rect x="5" y="7" width="14" height="11" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 4v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9.5" cy="12.5" r="1" fill="currentColor" />
+      <circle cx="14.5" cy="12.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function HandshakeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-7 w-7">
+      <path d="M4.5 9.5 8 6a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 0 2.8 0l.4-.4a2 2 0 0 1 2.8 0L21 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m7.5 11.5 3.2 3.2a2 2 0 0 0 2.8 0l.8-.8a2 2 0 0 1 2.8 0l.4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.5 10.5 7 14a2 2 0 0 0 2.8 0l.2-.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function WidgetPage() {
   const params = useParams();
   const botId = params.botId as string;
@@ -74,13 +95,13 @@ export default function WidgetPage() {
       {/* Header */}
       <div
         style={{ background: "#0A4F8F" }}
-        className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+        className="flex shrink-0 items-center gap-3 px-4 py-3"
       >
         <div
           style={{ background: "rgba(255,255,255,0.2)" }}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-white"
         >
-          🤖
+          <BotIcon />
         </div>
         <div className="flex-1 min-w-0">
           <p className="truncate text-sm font-bold text-white">{botName}</p>
@@ -92,7 +113,9 @@ export default function WidgetPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "#F8FAFF" }}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center pt-8">
-            <p className="text-3xl mb-2">👋</p>
+            <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#BAE6FD] bg-white text-[#0A4F8F]">
+              <HandshakeIcon />
+            </div>
             <p className="text-sm font-semibold" style={{ color: "#0A4F8F" }}>
               Hi! How can I help you?
             </p>
@@ -134,7 +157,7 @@ export default function WidgetPage() {
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t p-3" style={{ borderColor: "#BAE6FD", background: "#fff" }}>
+      <div className="shrink-0 border-t p-3" style={{ borderColor: "#BAE6FD", background: "#fff" }}>
         <div className="flex gap-2">
           <input
             value={input}
