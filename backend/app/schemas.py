@@ -17,6 +17,7 @@ class BotUpdate(BaseModel):
     display_name: Optional[str] = None
     welcome_message: Optional[str] = None
     widget_color: Optional[str] = None
+    lead_capture_enabled: Optional[bool] = None
 
 
 class BotResponse(BaseModel):
@@ -28,6 +29,7 @@ class BotResponse(BaseModel):
     display_name: Optional[str] = None
     welcome_message: Optional[str] = None
     widget_color: Optional[str] = None
+    lead_capture_enabled: bool = False
 
 
 class BotListResponse(BaseModel):
@@ -43,6 +45,24 @@ class BotAnalytics(BaseModel):
     total_conversations: int
     total_questions: int
     daily: List[DailyStats]
+
+
+class LeadCreate(BaseModel):
+    bot_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+
+class LeadResponse(BaseModel):
+    id: str
+    bot_id: str
+    name: Optional[str]
+    email: Optional[str]
+    created_at: datetime
+
+
+class LeadListResponse(BaseModel):
+    leads: List[LeadResponse]
 
 
 class ChatRequest(BaseModel):
@@ -109,6 +129,7 @@ class PublicBotInfo(BaseModel):
     display_name: Optional[str] = None
     welcome_message: Optional[str] = None
     widget_color: Optional[str] = None
+    lead_capture_enabled: bool = False
 
 
 class PublicChatRequest(BaseModel):

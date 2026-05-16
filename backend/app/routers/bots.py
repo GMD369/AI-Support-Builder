@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.auth.dependencies import get_current_user
 from app.database import SessionLocal
-from app.schemas import BotCreate, BotUpdate, BotResponse, BotListResponse, BotAnalytics
+from app.schemas import BotCreate, BotUpdate, BotResponse, BotListResponse, BotAnalytics, LeadListResponse
 from sqlalchemy import text
 
 router = APIRouter()
@@ -17,6 +17,7 @@ def _row_to_bot(row) -> dict:
         "display_name": row[5],
         "welcome_message": row[6],
         "widget_color": row[7],
+        "lead_capture_enabled": row[8] or False,
     }
 
 
@@ -29,7 +30,7 @@ def create_bot(bot: BotCreate, user=Depends(get_current_user)):
             INSERT INTO bots (user_id, name, description)
             VALUES (:user_id, :name, :description)
             RETURNING id, name, description, created_at, user_id,
-                      display_name, welcome_message, widget_color
+                      display_name, welcome_message, widget_color, lead_capture_enabled
             """),
             {"user_id": user["user_id"], "name": bot.name, "description": bot.description or ""},
         )
@@ -49,7 +50,7 @@ def list_bots(user=Depends(get_current_user)):
         result = db.execute(
             text("""
             SELECT id, name, description, created_at, user_id,
-                   display_name, welcome_message, widget_color
+                   display_name, welcome_message, widget_color, lead_capture_enabled
             FROM bots WHERE user_id = :user_id ORDER BY created_at DESC
             """),
             {"user_id": user["user_id"]},
@@ -63,11 +64,10 @@ def list_bots(user=Depends(get_current_user)):
 def get_bot_analytics(bot_id: str, user=Depends(get_current_user)):
     db = SessionLocal()
     try:
-        ownership = db.execute(
+        if not db.execute(
             text("SELECT id FROM bots WHERE id = :id AND user_id = :user_id"),
             {"id": bot_id, "user_id": user["user_id"]},
-        ).fetchone()
-        if not ownership:
+        ).fetchone():
             raise HTTPException(status_code=404, detail="Bot not found")
 
         totals = db.execute(
@@ -104,6 +104,33 @@ def get_bot_analytics(bot_id: str, user=Depends(get_current_user)):
         db.close()
 
 
+@router.get("/{bot_id}/leads", response_model=LeadListResponse)
+def get_bot_leads(bot_id: str, user=Depends(get_current_user)):
+    db = SessionLocal()
+    try:
+        if not db.execute(
+            text("SELECT id FROM bots WHERE id = :id AND user_id = :user_id"),
+            {"id": bot_id, "user_id": user["user_id"]},
+        ).fetchone():
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        rows = db.execute(
+            text("""
+            SELECT id, bot_id, name, email, created_at
+            FROM leads WHERE bot_id = :bot_id ORDER BY created_at DESC
+            """),
+            {"bot_id": bot_id},
+        )
+        return {
+            "leads": [
+                {"id": str(r[0]), "bot_id": str(r[1]), "name": r[2], "email": r[3], "created_at": r[4]}
+                for r in rows
+            ]
+        }
+    finally:
+        db.close()
+
+
 @router.get("/{bot_id}", response_model=BotResponse)
 def get_bot(bot_id: str, user=Depends(get_current_user)):
     db = SessionLocal()
@@ -111,7 +138,7 @@ def get_bot(bot_id: str, user=Depends(get_current_user)):
         result = db.execute(
             text("""
             SELECT id, name, description, created_at, user_id,
-                   display_name, welcome_message, widget_color
+                   display_name, welcome_message, widget_color, lead_capture_enabled
             FROM bots WHERE id = :id AND user_id = :user_id
             """),
             {"id": bot_id, "user_id": user["user_id"]},
@@ -128,11 +155,10 @@ def get_bot(bot_id: str, user=Depends(get_current_user)):
 def update_bot(bot_id: str, updates: BotUpdate, user=Depends(get_current_user)):
     db = SessionLocal()
     try:
-        existing = db.execute(
+        if not db.execute(
             text("SELECT id FROM bots WHERE id = :id AND user_id = :user_id"),
             {"id": bot_id, "user_id": user["user_id"]},
-        ).fetchone()
-        if not existing:
+        ).fetchone():
             raise HTTPException(status_code=404, detail="Bot not found")
 
         fields = {k: v for k, v in updates.model_dump().items() if v is not None}
@@ -148,7 +174,7 @@ def update_bot(bot_id: str, updates: BotUpdate, user=Depends(get_current_user)):
             UPDATE bots SET {set_clause}
             WHERE id = :id AND user_id = :user_id
             RETURNING id, name, description, created_at, user_id,
-                      display_name, welcome_message, widget_color
+                      display_name, welcome_message, widget_color, lead_capture_enabled
             """),
             fields,
         )

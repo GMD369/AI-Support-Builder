@@ -13,17 +13,19 @@ import {
   deleteConversation,
   updateBot,
   getBotAnalytics,
+  getBotLeads,
 } from "@/app/lib/api";
 import type {
   Bot,
   BotAnalytics,
+  Lead,
   DocumentFile,
   LocalMessage,
   Conversation,
   ConversationDetail,
 } from "@/app/types";
 
-type Tab = "chat" | "documents" | "conversations" | "analytics" | "customize" | "embed";
+type Tab = "chat" | "documents" | "conversations" | "analytics" | "customize" | "leads" | "embed";
 
 function PlusIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -90,6 +92,16 @@ function AnalyticsIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+function LeadsIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 19c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M17 11l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function CustomizeIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
@@ -152,10 +164,15 @@ export default function BotDetailPage() {
   const [analytics, setAnalytics] = useState<BotAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
+  // ── Leads state ─────────────────────────────────────────────────────────────
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
   // ── Customize state ─────────────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [widgetColor, setWidgetColor] = useState("#0A4F8F");
+  const [leadCaptureEnabled, setLeadCaptureEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -172,6 +189,7 @@ export default function BotDetailPage() {
         setDisplayName(b.display_name ?? b.name);
         setWelcomeMessage(b.welcome_message ?? "Hi! How can I help you?");
         setWidgetColor(b.widget_color ?? "#0A4F8F");
+        setLeadCaptureEnabled(b.lead_capture_enabled ?? false);
       } catch {
         router.replace("/dashboard/bots");
       } finally {
@@ -190,6 +208,7 @@ export default function BotDetailPage() {
     if (activeTab === "documents") void loadDocuments();
     if (activeTab === "conversations") void loadConversations();
     if (activeTab === "analytics") void loadAnalytics();
+    if (activeTab === "leads") void loadLeads();
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadDocuments = async () => {
@@ -205,6 +224,11 @@ export default function BotDetailPage() {
   const loadAnalytics = async () => {
     setAnalyticsLoading(true);
     try { setAnalytics(await getBotAnalytics(botId)); } catch { /**/ } finally { setAnalyticsLoading(false); }
+  };
+
+  const loadLeads = async () => {
+    setLeadsLoading(true);
+    try { setLeads(await getBotLeads(botId)); } catch { /**/ } finally { setLeadsLoading(false); }
   };
 
   // ── Chat handlers ──────────────────────────────────────────────────────────
@@ -285,6 +309,7 @@ export default function BotDetailPage() {
         display_name: displayName,
         welcome_message: welcomeMessage,
         widget_color: widgetColor,
+        lead_capture_enabled: leadCaptureEnabled,
       });
       setBot(updated);
       setSaveSuccess(true);
@@ -344,6 +369,7 @@ export default function BotDetailPage() {
     { key: "conversations", label: "Logs", icon: <LogsIcon className="h-4 w-4" /> },
     { key: "analytics", label: "Analytics", icon: <AnalyticsIcon className="h-4 w-4" /> },
     { key: "customize", label: "Customize", icon: <CustomizeIcon className="h-4 w-4" /> },
+    { key: "leads", label: "Leads", icon: <LeadsIcon className="h-4 w-4" /> },
     { key: "embed", label: "Embed", icon: <EmbedIcon className="h-4 w-4" /> },
   ];
 
@@ -678,6 +704,20 @@ export default function BotDetailPage() {
                     <p className="mt-1 text-xs text-[#1D7FC4]">Shown before the first message</p>
                   </div>
 
+                  <div className="flex items-center justify-between rounded-lg border border-[#BAE6FD] px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#0A4F8F]">Lead Capture</p>
+                      <p className="text-xs text-[#1D7FC4]">Ask for name &amp; email before chatting</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLeadCaptureEnabled((v) => !v)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${leadCaptureEnabled ? "bg-[#0A4F8F]" : "bg-[#BAE6FD]"}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${leadCaptureEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-[#0A4F8F]">Widget Color</label>
                     <div className="flex items-center gap-3">
@@ -728,6 +768,68 @@ export default function BotDetailPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════ LEADS TAB ════════ */}
+        {activeTab === "leads" && (
+          <div className="h-full overflow-y-auto p-6">
+            <div className="max-w-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-[#0A4F8F]">Captured Leads</h3>
+                  <p className="text-xs text-[#1D7FC4]">Visitors who submitted their info before chatting</p>
+                </div>
+                {!bot.lead_capture_enabled && (
+                  <button
+                    onClick={() => setActiveTab("customize")}
+                    className="rounded-lg border border-[#BAE6FD] px-3 py-1.5 text-xs font-semibold text-[#0A4F8F] hover:bg-[#F0F9FF]"
+                  >
+                    Enable Lead Capture →
+                  </button>
+                )}
+              </div>
+
+              {leadsLoading ? (
+                <p className="text-sm text-[#1D7FC4]">Loading...</p>
+              ) : leads.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#BAE6FD] p-10 text-center">
+                  <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0F9FF] text-[#0A4F8F]">
+                    <LeadsIcon />
+                  </div>
+                  <p className="text-sm font-semibold text-[#0A4F8F]">No leads yet</p>
+                  <p className="mt-1 text-xs text-[#1D7FC4]">
+                    {bot.lead_capture_enabled
+                      ? "Leads will appear here once visitors submit their info"
+                      : "Enable lead capture in the Customize tab to start collecting visitor info"}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-[#BAE6FD] bg-white shadow-sm">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#BAE6FD] bg-[#F0F9FF]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#0A4F8F]">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#0A4F8F]">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#0A4F8F]">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leads.map((lead, i) => (
+                        <tr key={lead.id} className={`border-b border-[#BAE6FD] last:border-0 ${i % 2 === 1 ? "bg-[#F8FAFF]" : ""}`}>
+                          <td className="px-4 py-3 text-[#0A4F8F]">{lead.name ?? <span className="text-[#BAE6FD]">—</span>}</td>
+                          <td className="px-4 py-3 text-[#0A4F8F]">{lead.email}</td>
+                          <td className="px-4 py-3 text-xs text-[#1D7FC4]">{new Date(lead.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="border-t border-[#BAE6FD] px-4 py-2">
+                    <p className="text-xs text-[#1D7FC4]">{leads.length} lead{leads.length !== 1 ? "s" : ""} total</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

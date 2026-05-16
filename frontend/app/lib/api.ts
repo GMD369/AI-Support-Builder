@@ -4,6 +4,7 @@ import { authFetch, getAccessToken } from "./authFetch";
 import type {
   Bot,
   BotAnalytics,
+  Lead,
   DocumentFile,
   ChatApiResponse,
   Conversation,
@@ -60,6 +61,13 @@ export async function getBotAnalytics(botId: string): Promise<BotAnalytics> {
   const res = await authFetch(`/bots/${botId}/analytics`);
   if (!res.ok) throw new Error("Failed to fetch analytics");
   return res.json() as Promise<BotAnalytics>;
+}
+
+export async function getBotLeads(botId: string): Promise<Lead[]> {
+  const res = await authFetch(`/bots/${botId}/leads`);
+  if (!res.ok) throw new Error("Failed to fetch leads");
+  const data = (await res.json()) as { leads: Lead[] };
+  return data.leads;
 }
 
 export async function deleteBot(botId: string): Promise<void> {

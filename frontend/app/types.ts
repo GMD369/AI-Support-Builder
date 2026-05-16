@@ -7,6 +7,7 @@ export type Bot = {
   display_name: string | null;
   welcome_message: string | null;
   widget_color: string | null;
+  lead_capture_enabled: boolean;
 };
 
 export type DocumentFile = {
@@ -52,4 +53,12 @@ export type BotAnalytics = {
   total_conversations: number;
   total_questions: number;
   daily: { date: string; questions: number }[];
+};
+
+export type Lead = {
+  id: string;
+  bot_id: string;
+  name: string | null;
+  email: string | null;
+  created_at: string;
 };

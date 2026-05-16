@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.database import SessionLocal
 from app.services.rag_service import generate_response
-from app.schemas import PublicBotInfo, PublicChatRequest, PublicChatResponse
+from app.schemas import PublicBotInfo, PublicChatRequest, PublicChatResponse, LeadCreate, LeadResponse
 from sqlalchemy import text
 
 router = APIRouter()
@@ -13,7 +13,7 @@ def get_public_bot_info(bot_id: str):
     try:
         result = db.execute(
             text("""
-            SELECT id, name, description, display_name, welcome_message, widget_color
+            SELECT id, name, description, display_name, welcome_message, widget_color, lead_capture_enabled
             FROM bots WHERE id = :id
             """),
             {"id": bot_id},
@@ -28,7 +28,39 @@ def get_public_bot_info(bot_id: str):
             "display_name": row[3],
             "welcome_message": row[4],
             "widget_color": row[5],
+            "lead_capture_enabled": row[6] or False,
         }
+    finally:
+        db.close()
+
+
+@router.post("/leads", response_model=LeadResponse)
+def capture_lead(lead: LeadCreate):
+    db = SessionLocal()
+    try:
+        bot = db.execute(
+            text("SELECT id FROM bots WHERE id = :id"),
+            {"id": lead.bot_id},
+        ).fetchone()
+        if not bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        result = db.execute(
+            text("""
+            INSERT INTO leads (bot_id, name, email)
+            VALUES (:bot_id, :name, :email)
+            RETURNING id, bot_id, name, email, created_at
+            """),
+            {"bot_id": lead.bot_id, "name": lead.name, "email": lead.email},
+        )
+        db.commit()
+        row = result.fetchone()
+        return {"id": str(row[0]), "bot_id": str(row[1]), "name": row[2], "email": row[3], "created_at": row[4]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
 

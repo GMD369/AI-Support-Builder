@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(Get-ChildItem \"F:\\\\Web Development\\\\AI-Support_Builder\\\\frontend\" -Filter \".env*\" -Force)",
+      "Bash(Select-Object Name, FullName)"
+    ]
+  }
+}
