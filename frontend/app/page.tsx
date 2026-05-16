@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/app/lib/supabaseClient";
+import ParticleCanvas from "@/app/components/ParticleCanvas";
 
 const FEATURES = [
   {
@@ -80,6 +81,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0f172a", color: "#f8fafc" }}>
+      <ParticleCanvas />
+      <div className="relative flex min-h-screen flex-col" style={{ zIndex: 1 }}>
       {/* Nav */}
       <header style={{ borderBottom: "1px solid #1e293b" }}>
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -189,6 +192,7 @@ export default function Home() {
           © {new Date().getFullYear()} AI Support Builder · All rights reserved.
         </div>
       </footer>
+      </div>
     </div>
   );
 }

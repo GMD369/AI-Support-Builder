@@ -31,7 +31,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--primary); text-decoration: none; }
+a { text-decoration: none; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -47,6 +47,12 @@ a { color: var(--primary); text-decoration: none; }
 .typing-dot { animation: bounce-dot 1.2s ease-in-out infinite; }
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Gradient button — forces white text regardless of inherited color */
+.btn-gradient {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff !important;
+}
 
 /* Fade in */
 @keyframes fade-in {
