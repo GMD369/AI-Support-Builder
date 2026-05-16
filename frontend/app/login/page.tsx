@@ -36,7 +36,7 @@ export default function LoginPage() {
                 <circle cx="14.5" cy="12.5" r="1" fill="white" stroke="none" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-white">AI Support Builder</span>
+            <span className="brand-name text-sm">EmbedBot</span>
           </Link>
           <Link href="/signup" className="text-sm font-medium transition-colors hover:text-white" style={{ color: "#64748b" }}>
             Need an account? <span style={{ color: "#6366f1" }}>Sign up →</span>

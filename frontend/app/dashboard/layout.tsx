@@ -91,8 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex items-center gap-2.5 px-5 py-5" style={{ borderBottom: "1px solid #1e293b" }}>
           <LogoIcon />
           <div>
-            <p className="text-sm font-bold leading-none text-white">AI Support</p>
-            <p className="text-xs" style={{ color: "#475569" }}>Builder</p>
+            <span className="brand-name text-sm">EmbedBot</span>
           </div>
         </div>
 

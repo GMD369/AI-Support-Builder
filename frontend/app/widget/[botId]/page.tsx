@@ -261,7 +261,7 @@ export default function WidgetPage() {
               </button>
             </div>
             <p className="mt-2 text-center text-xs" style={{ color: "#cbd5e1" }}>
-              Powered by <span style={{ color: "#94a3b8" }}>AI Support Builder</span>
+              Powered by <span className="brand-name" style={{ fontSize: "inherit" }}>EmbedBot</span>
             </p>
           </div>
         </>

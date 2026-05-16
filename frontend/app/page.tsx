@@ -95,7 +95,7 @@ export default function Home() {
                 <circle cx="14.5" cy="12.5" r="1" fill="white" stroke="none" />
               </svg>
             </div>
-            <span className="text-base font-bold text-white">AI Support Builder</span>
+            <span className="brand-name text-base">EmbedBot</span>
           </div>
           <div className="flex items-center gap-3">
             {session ? (
@@ -189,7 +189,7 @@ export default function Home() {
 
       <footer style={{ borderTop: "1px solid #1e293b" }}>
         <div className="mx-auto max-w-6xl px-6 py-6 text-center text-xs" style={{ color: "#334155" }}>
-          © {new Date().getFullYear()} AI Support Builder · All rights reserved.
+          © {new Date().getFullYear()} EmbedBot · All rights reserved.
         </div>
       </footer>
       </div>

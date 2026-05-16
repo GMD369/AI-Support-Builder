@@ -70,7 +70,7 @@ def chat(request: ChatRequest, user=Depends(get_current_user)):
         return {
             "question": request.question,
             "answer": result["answer"],
-            "sources": result["context"],
+            "sources": result["sources"],
             "conversation_id": conversation_id,
         }
     except HTTPException:

@@ -9,7 +9,7 @@ const font = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AI Support Builder",
+  title: "EmbedBot",
   description: "Build and deploy AI support chatbots in minutes",
 };
 
