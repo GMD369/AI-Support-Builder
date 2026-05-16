@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
-type LocalMessage = { role: "user" | "assistant"; content: string };
+type LocalMessage = { role: "user" | "assistant"; content: string; sources?: string[] };
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -28,22 +28,43 @@ function HandshakeIcon() {
   );
 }
 
+type BotInfo = {
+  name: string;
+  display_name: string | null;
+  welcome_message: string | null;
+  widget_color: string | null;
+};
+
 export default function WidgetPage() {
   const params = useParams();
   const botId = params.botId as string;
 
-  const [botName, setBotName] = useState("AI Assistant");
+  const [botInfo, setBotInfo] = useState<BotInfo>({
+    name: "AI Assistant",
+    display_name: null,
+    welcome_message: null,
+    widget_color: null,
+  });
   const [messages, setMessages] = useState<LocalMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const headerColor = botInfo.widget_color ?? "#0A4F8F";
+  const displayName = botInfo.display_name ?? botInfo.name;
+  const welcomeMessage = botInfo.welcome_message ?? "Hi! How can I help you?";
+
   useEffect(() => {
     fetch(`${API}/public/bots/${botId}`)
       .then((r) => r.json())
-      .then((d: { name?: string }) => {
-        if (d.name) setBotName(d.name);
+      .then((d: Partial<BotInfo> & { name?: string }) => {
+        setBotInfo({
+          name: d.name ?? "AI Assistant",
+          display_name: d.display_name ?? null,
+          welcome_message: d.welcome_message ?? null,
+          widget_color: d.widget_color ?? null,
+        });
       })
       .catch(() => {});
   }, [botId]);
@@ -56,7 +77,8 @@ export default function WidgetPage() {
     const question = input.trim();
     if (!question || sending) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
+    const updatedMessages: LocalMessage[] = [...messages, { role: "user", content: question }];
+    setMessages(updatedMessages);
     setSending(true);
 
     try {
@@ -67,13 +89,22 @@ export default function WidgetPage() {
           question,
           bot_id: botId,
           conversation_id: conversationId,
+          history: updatedMessages.slice(-10).map(({ role, content }) => ({ role, content })),
         }),
       });
-      const data = (await res.json()) as { answer?: string; conversation_id?: string; detail?: string };
+      const data = (await res.json()) as {
+        answer?: string;
+        sources?: string[];
+        conversation_id?: string;
+        detail?: string;
+      };
       if (!res.ok) throw new Error(data.detail ?? "Request failed");
       setConversationId(data.conversation_id ?? null);
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer ?? "" }]);
-    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.answer ?? "", sources: data.sources ?? [] },
+      ]);
+    } catch {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Something went wrong. Please try again." },
@@ -94,7 +125,7 @@ export default function WidgetPage() {
     <div className="flex h-screen flex-col bg-white" style={{ fontFamily: "system-ui, sans-serif" }}>
       {/* Header */}
       <div
-        style={{ background: "#0A4F8F" }}
+        style={{ background: headerColor }}
         className="flex shrink-0 items-center gap-3 px-4 py-3"
       >
         <div
@@ -104,7 +135,7 @@ export default function WidgetPage() {
           <BotIcon />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-bold text-white">{botName}</p>
+          <p className="truncate text-sm font-bold text-white">{displayName}</p>
           <p className="text-xs text-blue-200">AI Support · Online</p>
         </div>
       </div>
@@ -117,7 +148,7 @@ export default function WidgetPage() {
               <HandshakeIcon />
             </div>
             <p className="text-sm font-semibold" style={{ color: "#0A4F8F" }}>
-              Hi! How can I help you?
+              {welcomeMessage}
             </p>
             <p className="text-xs mt-1" style={{ color: "#1D7FC4" }}>
               Ask me anything — I&apos;m here to help.
@@ -126,20 +157,30 @@ export default function WidgetPage() {
         )}
 
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
             <div
               className="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed"
               style={
                 msg.role === "user"
-                  ? { background: "#0A4F8F", color: "#fff" }
+                  ? { background: headerColor, color: "#fff" }
                   : { background: "#fff", color: "#0A4F8F", border: "1px solid #BAE6FD" }
               }
             >
               {msg.content}
             </div>
+            {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1 max-w-[80%]">
+                {msg.sources.map((src) => (
+                  <span
+                    key={src}
+                    className="rounded-full border px-2 py-0.5 text-xs"
+                    style={{ borderColor: "#BAE6FD", color: "#1D7FC4", background: "#F0F9FF" }}
+                  >
+                    {src}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
 
@@ -172,7 +213,7 @@ export default function WidgetPage() {
             onClick={handleSend}
             disabled={sending || !input.trim()}
             className="rounded-full px-4 py-2 text-sm font-bold text-white transition-opacity disabled:opacity-40"
-            style={{ background: "#0A4F8F" }}
+            style={{ background: headerColor }}
           >
             Send
           </button>

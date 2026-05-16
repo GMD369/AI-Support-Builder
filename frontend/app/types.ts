@@ -4,6 +4,9 @@ export type Bot = {
   description: string | null;
   created_at: string;
   user_id: string;
+  display_name: string | null;
+  welcome_message: string | null;
+  widget_color: string | null;
 };
 
 export type DocumentFile = {
@@ -17,6 +20,7 @@ export type DocumentFile = {
 export type LocalMessage = {
   role: "user" | "assistant";
   content: string;
+  sources?: string[];
 };
 
 export type ChatMessage = {
@@ -42,4 +46,10 @@ export type Conversation = {
 
 export type ConversationDetail = Conversation & {
   messages: ChatMessage[];
+};
+
+export type BotAnalytics = {
+  total_conversations: number;
+  total_questions: number;
+  daily: { date: string; questions: number }[];
 };

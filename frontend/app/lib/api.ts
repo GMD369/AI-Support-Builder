@@ -3,6 +3,7 @@
 import { authFetch, getAccessToken } from "./authFetch";
 import type {
   Bot,
+  BotAnalytics,
   DocumentFile,
   ChatApiResponse,
   Conversation,
@@ -38,6 +39,27 @@ export async function getBot(botId: string): Promise<Bot> {
   const res = await authFetch(`/bots/${botId}`);
   if (!res.ok) throw new Error("Bot not found");
   return res.json() as Promise<Bot>;
+}
+
+export async function updateBot(
+  botId: string,
+  updates: { display_name?: string; welcome_message?: string; widget_color?: string }
+): Promise<Bot> {
+  const res = await authFetch(`/bots/${botId}`, {
+    method: "PATCH",
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const err = (await res.json()) as { detail?: string };
+    throw new Error(err.detail ?? "Failed to update bot");
+  }
+  return res.json() as Promise<Bot>;
+}
+
+export async function getBotAnalytics(botId: string): Promise<BotAnalytics> {
+  const res = await authFetch(`/bots/${botId}/analytics`);
+  if (!res.ok) throw new Error("Failed to fetch analytics");
+  return res.json() as Promise<BotAnalytics>;
 }
 
 export async function deleteBot(botId: string): Promise<void> {
