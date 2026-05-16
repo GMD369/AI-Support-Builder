@@ -9,25 +9,32 @@ router = APIRouter()
 
 @router.get("/bots/{bot_id}", response_model=PublicBotInfo)
 def get_public_bot_info(bot_id: str):
-    """Return bot name/description — no auth required (used by the widget)."""
     db = SessionLocal()
     try:
         result = db.execute(
-            text("SELECT id, name, description FROM bots WHERE id = :id"),
+            text("""
+            SELECT id, name, description, display_name, welcome_message, widget_color
+            FROM bots WHERE id = :id
+            """),
             {"id": bot_id},
         )
         row = result.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Bot not found")
-        return {"id": str(row[0]), "name": row[1], "description": row[2]}
+        return {
+            "id": str(row[0]),
+            "name": row[1],
+            "description": row[2],
+            "display_name": row[3],
+            "welcome_message": row[4],
+            "widget_color": row[5],
+        }
     finally:
         db.close()
 
 
 @router.post("/chat", response_model=PublicChatResponse)
 def public_chat(request: PublicChatRequest):
-    """RAG chat endpoint — no auth required. Used by the embeddable widget."""
-    # Resolve bot → owner's user_id so we can query their document chunks
     db = SessionLocal()
     try:
         result = db.execute(
@@ -41,12 +48,13 @@ def public_chat(request: PublicChatRequest):
     finally:
         db.close()
 
+    history = [{"role": m.role, "content": m.content} for m in (request.history or [])]
+
     try:
-        rag_result = generate_response(request.question, owner_user_id, request.bot_id)
+        rag_result = generate_response(request.question, owner_user_id, request.bot_id, history)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # Persist conversation using a stable public identifier
     public_user_id = f"public::{request.bot_id}"
     db = SessionLocal()
     try:
@@ -78,4 +86,8 @@ def public_chat(request: PublicChatRequest):
     finally:
         db.close()
 
-    return {"answer": rag_result["answer"], "conversation_id": conversation_id}
+    return {
+        "answer": rag_result["answer"],
+        "sources": rag_result["sources"],
+        "conversation_id": conversation_id,
+    }
